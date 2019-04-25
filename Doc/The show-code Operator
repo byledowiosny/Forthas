@@ -1,0 +1,51 @@
+ The `show-code` operator disassembles the code at the code-field address of a dictionary entry. The first column is the absolute address of the code. The second, the address relative to the beginning. And the third, the opcode itself. The default syntax is Intel. You can change this to AT&T with `at&t` and change it back to Intel with `intel`. Note that the absolute addresses shown here may differ from your installation.
+
+ Example:
+
+' 4swap show-code  
+40D068  0000     mov rax, [r14]
+40D06B  0003     mov rbx, [r14+0x20]
+40D06F  0007     mov [r14], rbx
+40D072  000A     mov [r14+0x20], rax
+40D076  000E     mov rax, [r14+0x8]
+40D07A  0012     mov rbx, [r14+0x28]
+40D07E  0016     mov [r14+0x8], rbx
+40D082  001A     mov [r14+0x28], rax
+40D086  001E     mov rax, [r14+0x10]
+40D08A  0022     mov rbx, [r14+0x30]
+40D08E  0026     mov [r14+0x10], rbx
+40D092  002A     mov [r14+0x30], rax
+40D096  002E     mov rax, [r14+0x18]
+40D09A  0032     mov rbx, [r14+0x38]
+40D09E  0036     mov [r14+0x18], rbx
+40D0A2  003A     mov [r14+0x38], rax
+40D0A6  003E     mov r11, [r12]
+40D0AA  0042     add r12, 0x8
+40D0AE  0046     jmp qword [r11]  ok
+
+at&t ' 4swap show-code intel  
+40D068  0000     mov (%r14), %rax
+40D06B  0003     mov 0x20(%r14), %rbx
+40D06F  0007     mov %rbx, (%r14)
+40D072  000A     mov %rax, 0x20(%r14)
+40D076  000E     mov 0x8(%r14), %rax
+40D07A  0012     mov 0x28(%r14), %rbx
+40D07E  0016     mov %rbx, 0x8(%r14)
+40D082  001A     mov %rax, 0x28(%r14)
+40D086  001E     mov 0x10(%r14), %rax
+40D08A  0022     mov 0x30(%r14), %rbx
+40D08E  0026     mov %rbx, 0x10(%r14)
+40D092  002A     mov %rax, 0x30(%r14)
+40D096  002E     mov 0x18(%r14), %rax
+40D09A  0032     mov 0x38(%r14), %rbx
+40D09E  0036     mov %rbx, 0x18(%r14)
+40D0A2  003A     mov %rax, 0x38(%r14)
+40D0A6  003E     mov (%r12), %r11
+40D0AA  0042     add $0x8, %r12
+40D0AE  0046     jmp (%r11)  ok
+
+
+The high-level definition of `show-code` is:
+
+    : show-code   @ dup 8- @ disasm ;
+

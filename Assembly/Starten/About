@@ -1,0 +1,9 @@
+ These modules compare multiplying by 10 using shifting and adding with doing it using the mul instruction.
+
+ The results show that the two approaches take close to the same time.
+
+ Load it with:
+
+    include Assembly/Starten/startencomparison.xfs
+
+

@@ -1,0 +1,4 @@
+ The Forthx64 source code consists of a C-stub file, forthx.c, the main Forthx64 source listing, forthx.s, and five optional specialized listings, FPUmath.s, math.s, ptrace.s, quadmath.s, and udis86.s. The five listings could be omitted or included in any combination (except that ptrace.s depends on udis86.s). But for me, they all have indispensible utility, so the default is to include them all.
+
+ Additionally there is an interface to a C-language implementation of the Mersenne Twister Random Number Algorithm. See "Include external modules here" in the forthx.s listing for how to include this.
+

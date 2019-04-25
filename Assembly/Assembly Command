@@ -1,0 +1,7 @@
+Create a raw binary machine code file, <file>.fcm from <file>.s using:
+
+    as -o <file>.o <file>.s && ld -e 0 --oformat binary -o <file>.fcm <file>.o
+
+
+ 
+

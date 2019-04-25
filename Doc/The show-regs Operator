@@ -1,0 +1,186 @@
+ The routine `show-regs` outputs a table of processor registers and flags. It takes as an argument the address where the data is stored. The macro, saveregsm, places the registers at the address passed as a parameter in the correct order for `show-regs` without changing anything except the program instruction pointer, which it leaves pointing to the instruction immediately following the macro. This means it can be placed anywhere in code where we want to examine the contents of the registers. Three save areas are set aside for this purpose - regs0, regs1, and regs2. Although others could be defined using these as a model.
+
+ In the example code at `doit` (a place to test code), registers rax, rbx, rcx, rdx, rsi, rdi, rbp, r8, r9, r10, and r11 are set to 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, and 11 respectively, and the registers are saved to both regs0 and regs1. Before executing `doit`, the save areas are empty, and so issuing `regs0 show-regs` will show all registers, including the flags register, containing zero. 
+
+regs0 show-regs  
+rax=0x0000000000000000   rbx=0x0000000000000000 
+rcx=0x0000000000000000   rdx=0x0000000000000000 
+rsi=0x0000000000000000   rdi=0x0000000000000000 
+rbp=0x0000000000000000   rsp=0x0000000000000000 
+r8 =0x0000000000000000   r9 =0x0000000000000000 
+r10=0x0000000000000000   r11=0x0000000000000000 
+r12=0x0000000000000000   r13=0x0000000000000000 
+r14=0x0000000000000000   r15=0x0000000000000000 
+rip=0x0000000000000000 
+                  
+|C|Z|S|O|A|P|T|I|D|
+|0|0|0|0|0|0|0|0|0|
+ ok
+
+ Now execute `doit regs0 show-regs regs1 show-regs`. The two register displays are identical except for the program counter, which for the first invocation of the macro points to the next invocation, and for the second invocation points to the nextm macro.
+ Note that `show-regs` always presents its data in hexadecimal.
+
+doit regs0 show-regs regs1 show-regs  
+rax=0x0000000000000001   rbx=0x0000000000000002 
+rcx=0x0000000000000003   rdx=0x0000000000000004 
+rsi=0x0000000000000005   rdi=0x0000000000000006 
+rbp=0x0000000000000007   rsp=0x00007FFECD188ED8 
+r8 =0x0000000000000008   r9 =0x0000000000000009 
+r10=0x000000000000000A   r11=0x000000000000000B 
+r12=0x000000000305A720   r13=0x0000000005383890 
+r14=0x0000000004B83880   r15=0x0000000004383850 
+rip=0x0000000000437D9A 
+                  
+|C|Z|S|O|A|P|T|I|D|
+|0|0|0|0|1|0|0|1|0|
+
+rax=0x0000000000000001   rbx=0x0000000000000002 
+rcx=0x0000000000000003   rdx=0x0000000000000004 
+rsi=0x0000000000000005   rdi=0x0000000000000006 
+rbp=0x0000000000000007   rsp=0x00007FFECD188ED8 
+r8 =0x0000000000000008   r9 =0x0000000000000009 
+r10=0x000000000000000A   r11=0x000000000000000B 
+r12=0x000000000305A720   r13=0x0000000005383890 
+r14=0x0000000004B83880   r15=0x0000000004383850 
+rip=0x0000000000437E27 
+                  
+|C|Z|S|O|A|P|T|I|D|
+|0|0|0|0|1|0|0|1|0|
+ ok
+
+ The saveregsm macro and the dictionary entry for `doit` follow:
+
+
+* Macro to Save Integer Registers
+
+# Macro to save all general registers plus the flags register to the save
+# area passed as a parameter (regs0, regs1, or regs2).
+# Note that the saved program counter is set to point to the 1st
+# instruction after the macro.
+# Place the total byte count (144, including the count itself)
+# in the quad preceding the data.
+# This macro can be placed anywhere in code for debugging. Use regs0,
+# regs1, or regs2 for this purpose.
+# Note the use of the "offset" keyword to push the address of the program counter.
+
+.macro  saveregsm area
+        mov   qword ptr[rip+\area-8], 144
+        mov   [rip+\area], rax
+        mov   [rip+\area+8], rbx
+        mov   [rip+\area+16], rcx
+        mov   [rip+\area+24], rdx
+        mov   [rip+\area+32], rsi
+        mov   [rip+\area+40], rdi
+        mov   [rip+\area+48], rbp
+        mov   [rip+\area+56], rsp
+        mov   [rip+\area+64], r8
+        mov   [rip+\area+72], r9
+        mov   [rip+\area+80], r10
+        mov   [rip+\area+88], r11
+        mov   [rip+\area+96], r12
+        mov   [rip+\area+104], r13
+        mov   [rip+\area+112], r14
+        mov   [rip+\area+120], r15
+        push  offset 41f
+        pop   qword ptr[rip+\area+128]
+        pushfq
+        pop   qword ptr[rip+\area+136]
+41:
+.endm
+
+
+* Dictionary Entry for `doit`
+
+# doit - A place for testing machine level experimental code.
+
+head    "doit"
+doit:   .quad doit0
+textm
+
+doit0:
+
+# Code goes here.
+
+
+
+# Note: Before changing this code see the "ptrace Quick Start Example"
+# and "The show-regs Operator" in the Documentation folder.
+
+        mov   rax, 1
+        mov   rbx, 2
+        mov   rcx, 3
+        mov   rdx, 4
+        mov   rsi, 5
+        mov   rdi, 6
+        mov   rbp, 7
+        mov   r8,  8
+        mov   r9,  9
+        mov   r10, 10
+        mov   r11, 11
+
+        saveregsm regs0
+        saveregsm regs1
+#        int3
+        nextm
+datam
+
+ To see the code and the expanded macros in Forthx64, issue `' doit show-code`, as follows:
+
+' doit show-code  
+437CC0  0000     mov rax, 0x1
+437CC7  0007     mov rbx, 0x2
+437CCE  000E     mov rcx, 0x3
+437CD5  0015     mov rdx, 0x4
+437CDC  001C     mov rsi, 0x5
+437CE3  0023     mov rdi, 0x6
+437CEA  002A     mov rbp, 0x7
+437CF1  0031     mov r8, 0x8
+437CF8  0038     mov r9, 0x9
+437CFF  003F     mov r10, 0xa
+437D06  0046     mov r11, 0xb
+437D0D  004D     mov qword [rip+0x21bd08], 0x90
+437D18  0058     mov [rip+0x21bd09], rax
+437D1F  005F     mov [rip+0x21bd0a], rbx
+437D26  0066     mov [rip+0x21bd0b], rcx
+437D2D  006D     mov [rip+0x21bd0c], rdx
+437D34  0074     mov [rip+0x21bd0d], rsi
+437D3B  007B     mov [rip+0x21bd0e], rdi
+437D42  0082     mov [rip+0x21bd0f], rbp
+437D49  0089     mov [rip+0x21bd10], rsp
+437D50  0090     mov [rip+0x21bd11], r8
+437D57  0097     mov [rip+0x21bd12], r9
+437D5E  009E     mov [rip+0x21bd13], r10
+437D65  00A5     mov [rip+0x21bd14], r11
+437D6C  00AC     mov [rip+0x21bd15], r12
+437D73  00B3     mov [rip+0x21bd16], r13
+437D7A  00BA     mov [rip+0x21bd17], r14
+437D81  00C1     mov [rip+0x21bd18], r15
+437D88  00C8     push 0x437d9a
+437D8D  00CD     pop qword [rip+0x21bd15]
+437D93  00D3     pushfq
+437D94  00D4     pop qword [rip+0x21bd16]
+437D9A  00DA     mov qword [rip+0x21bd1b], 0x90
+437DA5  00E5     mov [rip+0x21bd1c], rax
+437DAC  00EC     mov [rip+0x21bd1d], rbx
+437DB3  00F3     mov [rip+0x21bd1e], rcx
+437DBA  00FA     mov [rip+0x21bd1f], rdx
+437DC1  0101     mov [rip+0x21bd20], rsi
+437DC8  0108     mov [rip+0x21bd21], rdi
+437DCF  010F     mov [rip+0x21bd22], rbp
+437DD6  0116     mov [rip+0x21bd23], rsp
+437DDD  011D     mov [rip+0x21bd24], r8
+437DE4  0124     mov [rip+0x21bd25], r9
+437DEB  012B     mov [rip+0x21bd26], r10
+437DF2  0132     mov [rip+0x21bd27], r11
+437DF9  0139     mov [rip+0x21bd28], r12
+437E00  0140     mov [rip+0x21bd29], r13
+437E07  0147     mov [rip+0x21bd2a], r14
+437E0E  014E     mov [rip+0x21bd2b], r15
+437E15  0155     push 0x437e27
+437E1A  015A     pop qword [rip+0x21bd28]
+437E20  0160     pushfq
+437E21  0161     pop qword [rip+0x21bd29]
+437E27  0167     mov r11, [r12]
+437E2B  016B     add r12, 0x8
+437E2F  016F     jmp qword [r11]  ok
+
